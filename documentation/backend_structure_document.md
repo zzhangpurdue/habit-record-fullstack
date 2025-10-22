@@ -1,179 +1,177 @@
-# Backend Structure Document
+# Backend Structure Document for habit-record-fullstack
 
-This document outlines the backend architecture, hosting, and infrastructure for the **codeguide-starter** project. It uses plain language so anyone can understand how the backend is set up and how it supports the application.
+This document outlines the backend architecture, hosting solutions, and infrastructure components for the habit-record-fullstack application. It is written in everyday language to ensure clarity for both technical and non-technical readers.
 
 ## 1. Backend Architecture
 
-- **Framework and Design Pattern**
-  - We use **Next.js API Routes** to handle all server-side logic. These routes live alongside the frontend code in the same repository, making development and deployment simpler.
-  - The backend follows a **layered pattern**:
-    1. **API Layer**: Receives requests (login, registration, data fetch).  
-    2. **Service Layer**: Contains the core business logic (user validation, password hashing).  
-    3. **Data Access Layer**: Talks to the database via a simple ORM (e.g., Prisma or TypeORM).
+### Overall Design
+- **Framework**: Next.js (App Router) provides routing, server-side rendering (SSR), and API route handling in one integrated framework.  
+- **Language**: TypeScript ensures type safety across the entire codebase.  
+- **ORM**: Drizzle ORM offers a type-safe way to interact with PostgreSQL, reducing runtime errors.  
+- **Authentication**: Better Auth library manages user sessions, sign-up, and sign-in flows.  
+- **Pattern**: The code follows a layered approach:
+  1. **API Layer** – Next.js API routes handle HTTP requests.  
+  2. **Service/Controller Layer** – Encapsulates business logic (e.g., habit creation, streak calculations).  
+  3. **Data Access Layer** – Drizzle ORM performs database queries.  
 
-- **Scalability**
-  - Stateless API routes can scale horizontally—new instances can spin up on demand.  
-  - We can add caching or a message queue (e.g., Redis or RabbitMQ) without changing the core code.
-
-- **Maintainability**
-  - Code for each feature is grouped by route (authentication, dashboard).  
-  - A service layer separates complex logic from request handling.
-
-- **Performance**
-  - Lightweight Node.js handlers keep response times low.  
-  - Future use of database connection pooling and Redis for caching repeated queries.
+### Scalability, Maintainability, Performance
+- **Scalability**:  
+  - API routes can be auto-scaled on Vercel.  
+  - Database connections are pooled for efficiency.  
+  - The serverless model lets you add new endpoints without infrastructure changes.  
+- **Maintainability**:  
+  - Clear folder structure separates concerns (`app/`, `components/`, `lib/`, `db/`).  
+  - TypeScript and Drizzle ORM enforce consistent data shapes.  
+  - Reusable UI components and server actions minimize duplication.  
+- **Performance**:  
+  - SSR delivers pre-rendered pages to reduce client load time.  
+  - Static assets (CSS, JS) are served via CDN.  
+  - Optional caching at the edge layer speeds up common API responses.
 
 ## 2. Database Management
 
-- **Database Choice**
-  - We recommend **PostgreSQL** for structured data and reliable transactions.  
-  - In-memory caching can be added later with **Redis** for session tokens or frequently read data.
+### Technologies Used
+- **Type**: Relational (SQL) database.  
+- **System**: PostgreSQL.  
+- **ORM & Migrations**:
+  - Drizzle ORM for type-safe queries.  
+  - Drizzle Kit for schema migrations (creating, updating tables).
 
-- **Data Storage and Access**
-  - Use an ORM like **Prisma** or **TypeORM** to map JavaScript/TypeScript objects to database tables.
-  - Connection pooling ensures efficient use of database connections under load.
-  - Migrations track schema changes over time, keeping development, staging, and production in sync.
-
-- **Data Practices**
-  - Passwords are never stored in plain text—they are salted and hashed with **bcrypt** before saving.
-  - All outgoing data is typed and validated to prevent malformed records.
+### Data Structure and Practices
+- **Tables**: `users`, `habits`, `completions`.  
+- **Connection Management**: Connection pooling (e.g., pgBouncer) ensures efficient reuse of database connections.  
+- **Backups & Recovery**: Regular automated backups via the managed database provider (AWS RDS, Supabase, etc.).  
+- **Indexes**: Primary keys on `id` fields and foreign keys (`userId`, `habitId`) for fast lookups.  
+- **Access Patterns**:
+  - Read all habits for a specific user.  
+  - Insert new completion records.  
+  - Query completion history for charting.
 
 ## 3. Database Schema
 
-### Human-Readable Format
+Below is the schema for a PostgreSQL database in SQL format. It covers users, habits, and completions.
 
-- **Users**
-  - **id**: Unique identifier  
-  - **email**: User’s email address (unique)  
-  - **password_hash**: Securely hashed password  
-  - **created_at**: Account creation timestamp
-
-- **Sessions**
-  - **id**: Unique session record  
-  - **user_id**: Links to a user  
-  - **token**: Random string for authentication  
-  - **expires_at**: When the token stops working  
-  - **created_at**: When the session was created
-
-- **DashboardItems** *(optional for dynamic data)*
-  - **id**: Unique record  
-  - **title**: Item title  
-  - **content**: Item details  
-  - **created_at**: When the item was added
-
-### SQL Schema (PostgreSQL)
 ```sql
--- Users table
+-- Users table (Better Auth integration)
 CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Sessions table
-CREATE TABLE sessions (
-  id SERIAL PRIMARY KEY,
-  user_id INT REFERENCES users(id) ON DELETE CASCADE,
-  token VARCHAR(255) UNIQUE NOT NULL,
-  expires_at TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
+-- Habits table
+CREATE TABLE habits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  frequency TEXT NOT NULL,    -- e.g., 'daily', 'weekly'
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Dashboard items table
-CREATE TABLE dashboard_items (
-  id SERIAL PRIMARY KEY,
-  title TEXT NOT NULL,
-  content TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
+-- Completions table
+CREATE TABLE completions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  habit_id UUID NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(habit_id, date)       -- Ensures one completion per habit per day
 );
-```  
+```
 
 ## 4. API Design and Endpoints
 
-- **Approach**: We follow a **RESTful** style, grouping related endpoints under `/api` directories.
+The backend uses RESTful Next.js API routes to perform CRUD operations. All routes require a valid user session.
 
-- **Key Endpoints**
-  - `POST /api/auth/register`  
-    • Accepts `{ email, password }`  
-    • Creates a new user and issues a session token  
-  - `POST /api/auth/login`  
-    • Accepts `{ email, password }`  
-    • Verifies credentials and returns a session token  
-  - `POST /api/auth/logout`  
-    • Invalidates the session token on the server  
-  - `GET /api/dashboard/data`  
-    • Requires a valid session  
-    • Returns user-specific data or dashboard items  
+- **Authentication Routes** (provided by Better Auth)
+  - `POST /api/auth/signup` – Create a new user account.  
+  - `POST /api/auth/signin` – Sign in an existing user.  
+  - `POST /api/auth/signout` – End the user session.  
 
-- **Communication**
-  - Frontend sends JSON requests; backend replies with JSON and appropriate HTTP status codes.  
-  - Protected routes check for a valid session token (in cookies or Authorization header).
+- **Habit Routes**
+  - `GET /api/habits`  
+    • Purpose: List all habits for the current user.  
+    • Response: Array of habit objects.  
+  - `POST /api/habits`  
+    • Purpose: Create a new habit.  
+    • Body: `{ name, frequency }`.  
+    • Response: New habit object.  
+  - `PATCH /api/habits/:habitId`  
+    • Purpose: Update habit details.  
+    • Body: Fields to update (e.g., `name`).  
+  - `DELETE /api/habits/:habitId`  
+    • Purpose: Remove a habit and its completions.  
+
+- **Completion Routes**
+  - `POST /api/habits/:habitId/completions`  
+    • Purpose: Log a completion for today.  
+    • Response: Completion record.  
+  - `DELETE /api/habits/:habitId/completions/:date`  
+    • Purpose: Remove a specific completion.  
 
 ## 5. Hosting Solutions
 
-- **Cloud Provider**:  
-  - **Vercel** (recommended) offers seamless Next.js deployments, auto-scaling, and built-in CDN.  
-  - Alternatively, **Netlify** or any Node.js-capable host will work.
-
-- **Benefits**
-  - **Reliability**: Global servers and failover across regions.  
-  - **Scalability**: Auto-scale serverless functions based on traffic.  
-  - **Cost-Effectiveness**: Pay-per-use model means low cost for small projects.
+- **Application Hosting**: Vercel  
+  - Auto-scales serverless functions for API routes.  
+  - Built-in global CDN for static and SSR assets.  
+  - Zero-config deployments from GitHub.  
+- **Database Hosting**: Managed PostgreSQL (e.g., AWS RDS, Supabase)  
+  - Automated backups and point-in-time recovery.  
+  - High availability across regions.  
+  - Easy scaling of storage and compute.
 
 ## 6. Infrastructure Components
 
-- **Load Balancer**
-  - Provided by the hosting platform—distributes API requests across function instances.
-
-- **CDN (Content Delivery Network)**
-  - Vercel’s global edge network caches static assets (CSS, JS, images) for faster page loads.
-
-- **Caching**
-  - **Redis** (optional) for session storage or caching dashboard queries to reduce database load.
-
-- **Object Storage**
-  - For file uploads or backups, integrate with AWS S3 or similar services.
-
-- **Message Queue**
-  - In future, use **RabbitMQ** or **Kafka** for background tasks (e.g., email notifications).
+- **Load Balancer & Edge Network**  
+  - Vercel’s edge network routes users to the nearest server.  
+- **CDN**  
+  - Static files and SSR responses are cached at edge locations for low latency.  
+- **Caching**  
+  - Edge caching rules for API routes with predictable data (e.g., frequently read stats).  
+  - Optionally integrate Redis for user-specific cache (session data, recent queries).  
+- **Containerization (Local Dev)**
+  - Docker & Docker Compose define services for the Next.js app and PostgreSQL.  
+  - Ensures a consistent environment for all developers.
 
 ## 7. Security Measures
 
 - **Authentication & Authorization**
-  - Passwords hashed with **bcrypt** and salted.  
-  - Session tokens stored in secure, HttpOnly cookies or Authorization headers.  
-  - Protected endpoints verify tokens before proceeding.
-
+  - Better Auth secures sessions with HTTP-only cookies.  
+  - All API routes validate user sessions and check resource ownership before allowing access.  
 - **Data Encryption**
-  - **HTTPS/TLS** encrypts data in transit.  
-  - Database connections use SSL to encrypt data between the app and the database.
-
-- **Input Validation**
-  - Every incoming request is validated (e.g., valid email format, password length) to prevent SQL injection or other attacks.
-
-- **Web Security Best Practices**
-  - Enable **CORS** policies to limit allowed origins.  
-  - Use **CSRF tokens** or same-site cookies to prevent cross-site requests.  
-  - Set secure headers with **Helmet** or a similar middleware.
+  - TLS (HTTPS) for all client-server communication.  
+  - Passwords stored as salted hashes (e.g., bcrypt).  
+- **Environment Variables**
+  - Secrets (database URL, JWT keys) are stored in environment variables, not code.  
+- **Input Validation & Sanitization**
+  - Use Zod (or similar) to validate request bodies and query parameters.  
+  - ORM queries prevent SQL injection.
+- **Security Headers**
+  - Content Security Policy, X-Frame-Options, and other headers enforced by Next.js.
 
 ## 8. Monitoring and Maintenance
 
-- **Performance Monitoring**
-  - Integrate **Sentry** or **LogRocket** for real-time crash reporting and performance tracing.  
-  - Use Vercel’s built-in analytics to track request latencies and error rates.
-
-- **Logging**
-  - Structured logs (JSON) for all API requests and errors, shipped to a log management service like **Datadog** or **Logflare**.
-
+- **Logging & Error Tracking**
+  - Integrate Sentry (or similar) for capturing runtime errors and performance metrics.  
+  - Use structured logs (Winston, Pino) for API requests and database errors.  
 - **Health Checks**
-  - Define a `/health` endpoint that returns a 200 status if the service is up and the database is reachable.
-
-- **Maintenance Strategies**
-  - Automated migrations run on deploy to keep the database schema up to date.  
-  - Scheduled dependency audits and security scans (e.g., `npm audit`).
-  - Regular backups of the database (daily or weekly depending on usage).
+  - Simple ping endpoint (`GET /api/health`) to verify service is alive.  
+- **Performance Monitoring**
+  - Vercel Analytics for real-time performance data (latency, error rates).  
+  - Database monitoring via provider dashboard (CPU, connections, slow queries).  
+- **Scheduled Maintenance**
+  - Drizzle Kit migrations are applied automatically on deployment or manually via CLI.  
+  - Regular dependency updates and security patch reviews managed via GitHub Dependabot.
 
 ## 9. Conclusion and Overall Backend Summary
 
-The backend for **codeguide-starter** is built on Next.js API Routes and Node.js, paired with PostgreSQL for data and optional Redis for caching. It follows a clear layered architecture that keeps code easy to maintain and extend. With RESTful endpoints for authentication and data, secure practices like password hashing and HTTPS, and hosting on Vercel for scalability and global performance, this setup meets the project’s goals for a fast, secure, and developer-friendly foundation. Future enhancements—such as background job queues, advanced monitoring, or richer data models—can be added without disrupting the core structure.
+The backend for habit-record-fullstack combines Next.js, TypeScript, Drizzle ORM, and PostgreSQL to deliver a robust, scalable foundation for a habit-tracking app. Authentication is handled securely by Better Auth, while API routes and server actions provide the core CRUD operations for habits and completions. Hosting on Vercel and a managed PostgreSQL service ensures reliability, global performance, and minimal operational overhead.
+
+Unique strengths of this setup include:
+- Fully type-safe stack from front end to database queries.  
+- Fast server-side rendering paired with edge caching for a lightning-quick user experience.  
+- Clear separation of concerns and modular components for easy extension and maintenance.
+
+With this architecture in place, developers can focus on adding features—streak calculations, reminders, advanced analytics—secure in the knowledge that the backend is stable, performant, and ready to grow with user needs.

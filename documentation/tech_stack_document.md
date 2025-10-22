@@ -1,90 +1,134 @@
-# Tech Stack Document
+# Habit-Record-Fullstack: Tech Stack Document
 
-This document explains the key technologies chosen for the **codeguide-starter** project. It’s written in everyday language so anyone—technical or not—can understand why each tool was picked and how it supports the application.
+This document explains the technology choices for the `habit-record-fullstack` starter template. It is written in everyday language so that anyone—whether technical or not—can understand why each piece was selected and how it contributes to building a habit-tracking application.
 
 ## 1. Frontend Technologies
-The frontend is everything the user sees and interacts with. For this project, we’ve used:
 
-- **Next.js (App Router)**
-  - A React framework that makes page routing, server-side rendering, and API routes very simple.
-  - Enhances user experience by pre-rendering pages on the server or at build time, leading to faster initial load.
-- **React 18**
-  - The underlying library for building user interfaces with reusable components.
-  - Provides a smooth, interactive experience thanks to its virtual DOM and modern hooks.
-- **TypeScript**
-  - A superset of JavaScript that adds types (labels for data).
-  - Helps catch errors early during development and makes the code easier to maintain.
-- **CSS (globals.css & theme.css)**
-  - **globals.css** applies base styles (fonts, colors, resets) across the entire app.
-  - **dashboard/theme.css** defines the look and feel specific to the dashboard area.
-  - This separation keeps styles organized and avoids accidental style conflicts.
+The frontend is what users see and interact with in their browsers. We chose tools that make building a clean, responsive, and enjoyable user interface fast and straightforward.
 
-By combining these tools, we have a clear structure (Next.js folders for pages and layouts), safer code (TypeScript), and flexible styling with vanilla CSS.
+• Next.js (App Router)
+  - Provides the structure for pages, routes, and server-side rendering.
+  - Ensures fast page loads by pre-rendering content on the server.
+
+• React & TypeScript
+  - React lets us build reusable UI components (buttons, tables, charts).
+  - TypeScript adds simple checks that prevent common mistakes (like mixing up a number with text), making the code more reliable.
+
+• shadcn/ui component library
+  - Offers pre-built, accessible components (Cards, Tables, Dialogs) that look polished out of the box.
+  - Speeds up development by letting us focus on habit-tracker features instead of building UI pieces from scratch.
+
+• Tailwind CSS v4
+  - A utility-first styling tool that keeps design consistent and easy to adjust.
+  - Enables rapid tweaks (colors, spacing, layout) without writing custom CSS files.
+
+• next-themes
+  - Manages light and dark mode switching with minimal setup.
+  - Respects user preferences and provides a modern look day or night.
+
+These tools work together to give users a smooth and attractive interface for viewing and logging habits.
 
 ## 2. Backend Technologies
-The backend handles data, user accounts, and the logic behind the scenes. Our choices here are:
 
-- **Next.js API Routes**
-  - Allows us to write server-side code (`route.ts` files) alongside our frontend in the same project.
-  - Runs on Node.js, so we can handle requests like sign-up, sign-in, and data fetching in one place.
-- **Node.js Runtime**
-  - The JavaScript environment on the server that executes our API routes.
-- **bcrypt** (npm package)
-  - A library for hashing passwords securely before storing them.
-  - Ensures that even if someone got access to our data, raw passwords aren’t visible.
-- **(Optional) NextAuth.js or JWT**
-  - While this starter kit shows a custom authentication flow, it can easily integrate services like NextAuth.js for email-based login or JWT (JSON Web Tokens) for stateless sessions.
+The backend powers the logic behind the scenes—handling user accounts, storing data, and responding to requests from the frontend.
 
-These components work together to receive user credentials, verify or store them securely, manage sessions or tokens, and deliver protected data back to the frontend.
+• Better Auth (Authentication)
+  - Handles secure sign-up and sign-in using email and password.
+  - Ensures each user’s data remains private and accessible only to them.
+
+• Next.js API Routes & Server Actions
+  - Lets us create simple endpoints (URLs) for actions like creating a new habit or recording a completion.
+  - Built into Next.js, so there’s no separate server to manage.
+
+• PostgreSQL Database
+  - A reliable, well-supported database for storing structured data (users, habits, completions).
+  - Handles relationships easily (for example, linking each habit to its owner).
+
+• Drizzle ORM & Drizzle Kit
+  - Provides a type-safe way to work with the database, reducing errors when reading or writing data.
+  - Drizzle Kit helps generate and apply database schema changes (migrations) without manual SQL scripting.
+
+• Docker & Docker Compose (Local Development)
+  - Runs a consistent PostgreSQL database on any machine, avoiding “it works on my computer” issues.
+  - Lets developers spin up the entire environment with a single command.
+
+Together, these choices create a secure, maintainable backend that’s ready to grow from a static demo to a full habit-tracking service.
 
 ## 3. Infrastructure and Deployment
-Infrastructure covers where and how we host the app, as well as how changes get delivered:
 
-- **Git & GitHub**
-  - Version control system (Git) and remote hosting (GitHub) keep track of all code changes and allow team collaboration.
-- **Vercel (or Netlify)**
-  - A popular hosting service optimized for Next.js, with one-click deployments and global content delivery.
-  - Automatically rebuilds and deploys the site whenever code is pushed to the main branch.
-- **GitHub Actions (CI/CD)**
-  - Automates tasks like linting (ESLint), formatting (Prettier), and running any tests you add.
-  - Ensures that only clean, tested code goes live.
+These tools handle where and how the application lives online, as well as how new code gets tested and released.
 
-Together, these tools provide a reliable, scalable setup where every code change is tested and deployed quickly, with minimal manual work.
+• Git & GitHub (Version Control)
+  - Tracks every change in the code, making collaboration safe and organized.
+
+• GitHub Actions (CI/CD)
+  - Automatically runs tests and builds the app whenever code is pushed.
+  - Can deploy to production (e.g., Vercel) once checks pass.
+
+• Vercel (Hosting Platform)
+  - Optimized for Next.js applications, handling server-side rendering and static assets.
+  - Scales seamlessly as user numbers grow, with minimal configuration.
+
+• Docker (Containers)
+  - Ensures local development matches production environments.
+  - Simplifies adding services like the PostgreSQL database without manual installation.
+
+By combining these, we achieve a reliable workflow: develop locally, test automatically, and deploy with confidence.
 
 ## 4. Third-Party Integrations
-While this starter kit is minimal by design, it already includes or can easily add:
 
-- **bcrypt**
-  - For secure password hashing (included as an npm dependency).
-- **NextAuth.js** (optional)
-  - A full-featured authentication library supporting email/password, OAuth, and more.
-- **Sentry or LogRocket** (optional)
-  - For real-time error tracking and performance monitoring in production.
+These services add extra functionality without reinventing the wheel.
 
-These integrations help extend the app’s capabilities without building every feature from scratch.
+• Better Auth
+  - Outsources secure authentication flows, saving time on building and maintaining login systems.
+
+• Vercel
+  - Handles global content delivery, SSL certificates, and scaling automatically.
+
+(Optional future integrations)
+• Analytics Tools (e.g., Google Analytics)
+  - Can track user engagement and feature usage.
+
+• Notification Services (e.g., email or push providers)
+  - Can send reminders when users miss habit days.
+
+These integrations let us focus on core habit features while leveraging proven external services.
 
 ## 5. Security and Performance Considerations
-We’ve baked in several measures to keep users safe and the app running smoothly:
 
-Security:
-- Passwords are never stored in plain text—bcrypt hashes them with a random salt.
-- API routes can implement CSRF protection and input validation to block malicious requests.
-- Session tokens or cookies are marked secure and HttpOnly to prevent theft via JavaScript.
+Ensuring user data is safe and the app is fast makes for a trustworthy experience.
 
-Performance:
-- Server-side rendering (SSR) and static site generation (SSG) in Next.js deliver pages faster.
-- Code splitting and lazy-loaded components ensure users only download what they need.
-- Global CSS and theme files are small and cached by the browser for quick repeat visits.
+• Authentication & Session Management
+  - Better Auth verifies each user’s identity and ties requests to their account.
+  - API routes check sessions before granting access to habit data.
 
-These strategies work together to give users a fast, secure experience every time.
+• Data Protection
+  - PostgreSQL runs in its own container, separated from the web app.
+  - Drizzle ORM prevents unsafe queries and SQL injection risks.
+
+• Performance Optimizations
+  - Server-Side Rendering (SSR) ensures the dashboard loads quickly with real data.
+  - Tailwind CSS and shadcn/ui keep CSS file sizes small.
+  - Code-splitting in Next.js loads only the JavaScript needed per page.
+
+• Error Handling & Validation
+  - Form libraries (e.g., React Hook Form + Zod) can be added to prevent invalid habit entries.
+  - API routes include checks to avoid duplicate completions or unauthorized access.
+
+These measures protect user information and keep the interface responsive.
 
 ## 6. Conclusion and Overall Tech Stack Summary
-In building **codeguide-starter**, we chose technologies that:
 
-- Align with modern web standards (Next.js, React, TypeScript).
-- Provide a clear, file-based project structure for rapid onboarding.
-- Offer built-in support for server-side rendering, API routes, and static assets.
-- Emphasize security through password hashing, session management, and safe defaults.
-- Enable easy scaling and future enhancements via modular code and optional integrations.
+This starter template uses a modern, well-integrated set of tools to kickstart any habit-tracking application:
 
-This stack strikes a balance between simplicity for newcomers and flexibility for experienced teams. It accelerates development of a secure authentication flow and a polished dashboard, while leaving room to plug in databases, test suites, and advanced features as the project grows.
+• Frontend: Next.js, React, TypeScript, shadcn/ui, Tailwind CSS, next-themes
+• Backend: Better Auth, Next.js API Routes/Server Actions, PostgreSQL, Drizzle ORM/Kit
+• Dev & Deployment: Docker, Docker Compose, GitHub (Git & Actions), Vercel
+
+Together, they deliver:
+• A polished, responsive user interface with built-in theming
+• Secure user authentication and private data storage
+• A clear path from static demo data to a full database-backed service
+• Reliable development, testing, and deployment workflows
+
+By choosing these technologies, the project balances speed of development with long-term maintainability. This foundation lets teams focus on adding unique habit-tracking logic, confident that the underlying stack is robust, secure, and scalable.

@@ -1,117 +1,109 @@
-# Project Requirements Document: codeguide-starter
-
----
+# Project Requirements Document
 
 ## 1. Project Overview
 
-The **codeguide-starter** project is a boilerplate web application that provides a ready-made foundation for any web project requiring secure user authentication and a post-login dashboard. It sets up the common building blocks—sign-up and sign-in pages, API routes to handle registration and login, and a simple dashboard interface driven by static data. By delivering this skeleton, it accelerates development time and ensures best practices are in place from day one.
+This project, **habit-record-fullstack**, is a starter template for a habit-tracking web application built on Next.js (App Router) and TypeScript. It provides secure user authentication, an interactive dashboard, and a foundational database setup with Drizzle ORM and PostgreSQL. The goal is to let developers focus on habit-tracking logic right away, rather than boilerplate setup.
 
-This starter kit is being built to solve the friction developers face when setting up repeated common tasks: credential handling, session management, page routing, and theming. Key objectives include: 1) delivering a fully working authentication flow (registration & login), 2) providing a gated dashboard area upon successful login, 3) establishing a clear, maintainable project structure using Next.js and TypeScript, and 4) demonstrating a clean theming approach with global and section-specific CSS. Success is measured by having an end-to-end login journey in under 200 lines of code and zero runtime type errors.
+By the end of the first version, users should be able to sign up, log in, create and view their habits, mark daily completions, and see a simple streak chart. Success is measured by completing these core flows end-to-end, with data saved in the database and rendered in a responsive UI. The template is optimized for local development (Docker) and deployment on platforms like Vercel.
 
 ---
 
 ## 2. In-Scope vs. Out-of-Scope
 
-### In-Scope (Version 1)
-- User registration (sign-up) form with validation
-- User login (sign-in) form with validation
-- Next.js API routes under `/api/auth/route.ts` handling:
-  - Credential validation
-  - Password hashing (e.g., bcrypt)
-  - Session creation or JWT issuance
-- Protected dashboard pages under `/dashboard`:
-  - `layout.tsx` wrapping dashboard content
-  - `page.tsx` rendering static data from `data.json`
-- Global application layout in `/app/layout.tsx`
-- Basic styling via `globals.css` and `dashboard/theme.css`
-- TypeScript strict mode enabled
+**In-Scope (Version 1):**
+- Email/password sign-up and sign-in using Better Auth
+- Protected dashboard page after login
+- Habit CRUD (Create, Read, Update, Delete) via Next.js API routes or Server Actions
+- Habit completions: marking a habit as done for the current day
+- Interactive area chart showing completion streaks over time
+- Sortable data table listing habits with name, frequency, and streak
+- Type-safe database schema with Drizzle ORM and PostgreSQL (tables: `users`, `habits`, `completions`)
+- Responsive, component-based UI with shadcn/ui and Tailwind CSS v4
+- Light/dark theming via next-themes
+- Docker Compose setup for local PostgreSQL
 
-### Out-of-Scope (Later Phases)
-- Integration with a real database (PostgreSQL, MongoDB, etc.)
-- Advanced authentication flows (password reset, email verification, MFA)
-- Role-based access control (RBAC)
-- Multi-tenant or white-label theming
-- Unit, integration, or end-to-end testing suites
-- CI/CD pipeline and production deployment scripts
+**Out-of-Scope (Phase 2+):**
+- Push or email reminders and notifications
+- Advanced analytics (heatmaps, completion rates over custom intervals)
+- Social features (sharing habits, leaderboards)
+- Mobile app or React Native version
+- Machine-learning habit suggestions or predictions
+- Multi-language support
+- CI/CD pipelines (beyond suggested GitHub Actions)
 
 ---
 
 ## 3. User Flow
 
-A new visitor lands on the root URL and sees a welcome page with options to **Sign Up** or **Sign In**. If they choose Sign Up, they fill in their email, password, and hit “Create Account.” The form submits to `/api/auth/route.ts`, which hashes the password, creates a new user session or token, and redirects them to the dashboard. If any input is invalid, an inline error message explains the issue (e.g., “Password too short”).
+When a new visitor lands on the homepage, they can choose to sign up with an email and password or log in if they already have an account. After submitting valid credentials, they are redirected to the `/dashboard` route, which runs server-side code to confirm their session and fetch their personal habit data from the database.
 
-Once authenticated, the user is taken to the `/dashboard` route. Here they see a sidebar or header defined by `dashboard/layout.tsx`, and the main panel pulls in static data from `data.json`. They can log out (if that control is present), but otherwise their entire session is managed by server-side cookies or tokens. Returning users go directly to Sign In, submit credentials, and upon success they land back on `/dashboard`. Any unauthorized access to `/dashboard` redirects back to Sign In.
+Once on the dashboard, the user sees a navigation sidebar (links to Dashboard, Settings, Logout) and a main content area. The top section displays an interactive area chart of their habit streaks. Below is a sortable table listing each habit’s name, frequency (e.g., daily), current streak, and action buttons: **Log Today**, **Edit**, and **Delete**. Clicking **Log Today** triggers an API call to record a completion, then updates the chart and table in place. A “New Habit” button opens a modal form to create additional habits.
 
 ---
 
 ## 4. Core Features
 
-- **Sign-Up Page (`/app/sign-up/page.tsx`)**: Form fields for email & password, client-side validation, POST to `/api/auth`.
-- **Sign-In Page (`/app/sign-in/page.tsx`)**: Form fields for email & password, client-side validation, POST to `/api/auth`.
-- **Authentication API (`/app/api/auth/route.ts`)**: Handles both registration and login based on HTTP method, integrates password hashing (bcrypt) and session or JWT logic.
-- **Global Layout (`/app/layout.tsx` + `globals.css`)**: Shared header, footer, and CSS resets across all pages.
-- **Dashboard Layout (`/app/dashboard/layout.tsx` + `dashboard/theme.css`)**: Sidebar or top nav for authenticated flows, section-specific styling.
-- **Dashboard Page (`/app/dashboard/page.tsx`)**: Reads `data.json`, renders it as cards or tables.
-- **Static Data Source (`/app/dashboard/data.json`)**: Example dataset to demo dynamic rendering.
-- **TypeScript Configuration**: `tsconfig.json` with strict mode and path aliases (if any).
+- **User Authentication**: Secure email/password flows, session management, protected routes.
+- **Habit Management**: Create, read, update, delete habits tied to the current user.
+- **Completion Logging**: Record daily completions with server-side validation to prevent duplicates.
+- **Streak Chart**: Interactive area chart showing completion streaks over the last 30 days.
+- **Habit Table**: Sortable, paginated list of habits with controls for logging and editing.
+- **Theming**: Light/dark mode toggle with next-themes.
+- **Database Integration**: Drizzle ORM schemas and migrations for `users`, `habits`, `completions`.
+- **API Endpoints**: Next.js API routes or Server Actions for all CRUD operations.
+- **Responsive UI**: Mobile-first design with Tailwind CSS and shadcn/ui components.
+- **Local Development**: Docker Compose configuration with PostgreSQL container.
 
 ---
 
 ## 5. Tech Stack & Tools
 
-- **Framework**: Next.js (App Router) for file-based routing, SSR/SSG, and API routes.
-- **Language**: TypeScript for type safety.
-- **UI Library**: React 18 for component-based UI.
-- **Styling**: Plain CSS via `globals.css` (global reset) and `theme.css` (sectional styling). Can easily migrate to CSS Modules or Tailwind in the future.
-- **Backend**: Node.js runtime provided by Next.js API routes.
-- **Password Hashing**: bcrypt (npm package).
-- **Session/JWT**: NextAuth.js or custom JWT logic (to be decided in implementation).
-- **IDE & Dev Tools**: VS Code with ESLint, Prettier extensions. Optionally, Cursor.ai for AI-assisted coding.
+- **Frontend Framework**: Next.js (App Router) with React
+- **Language**: TypeScript for type safety
+- **UI Library**: shadcn/ui (prebuilt React components)
+- **Styling**: Tailwind CSS v4
+- **Theming**: next-themes for light/dark mode switch
+- **Authentication**: Better Auth (email/password)
+- **ORM**: Drizzle ORM with Drizzle Kit for migrations
+- **Database**: PostgreSQL (in Docker for local dev)
+- **API Routes**: Next.js API routes or Server Actions
+- **Form Validation**: Zod + React Hook Form (optional but recommended)
+- **Containerization**: Docker & Docker Compose
+- **Deployment**: Vercel (optimized build)
 
 ---
 
 ## 6. Non-Functional Requirements
 
-- **Performance**: Initial page load under 200 ms on a standard broadband connection. API responses under 300 ms.
-- **Security**:
-  - HTTPS only in production.
-  - Proper CORS, CSRF protection for API routes.
-  - Secure password storage (bcrypt with salt).
-  - No credentials or secrets checked into version control.
-- **Scalability**: Structure must support adding database integration, caching layers, and advanced auth flows without rewiring core app.
-- **Usability**: Forms should give real-time feedback on invalid input. Layout must be responsive (mobile > 320 px).
-- **Maintainability**: Code must adhere to TypeScript strict mode. Linting & formatting enforced by ESLint/Prettier.
+- **Performance**: Server-side rendered dashboard should TTFB < 200ms. Chart and table updates within 300ms of API calls.
+- **Security**: OWASP top 10 compliance, HTTPS everywhere, secure cookies (HttpOnly, SameSite), salt-and-hash passwords.
+- **Scalability**: Design API routes to handle hundreds of concurrent users; database connection pooling.
+- **Accessibility**: WCAG 2.1 AA standards, keyboard navigation, aria-labels on interactive elements.
+- **Reliability**: Zero data loss on habit logging; database transactions for all writes.
+- **Usability**: Clear form validation errors, smooth mobile layout, consistent UI components.
 
 ---
 
 ## 7. Constraints & Assumptions
 
-- **No Database**: Dashboard uses only `data.json`; real database integration is deferred.
-- **Node Version**: Requires Node.js >= 14.
-- **Next.js Version**: Built on Next.js 13+ App Router.
-- **Authentication**: Assumes availability of bcrypt or NextAuth.js at implementation time.
-- **Hosting**: Targets serverless or Node.js-capable hosting (e.g., Vercel, Netlify).
-- **Browser Support**: Modern evergreen browsers; no IE11 support required.
+- **Auth Service**: Better Auth must support sessions and user management in your hosting environment.
+- **Database Setup**: PostgreSQL instance available via Docker or managed service with connection string in `.env`.
+- **Environment Variables**: `.env` file will store DB URL, Better Auth keys, NEXTAUTH_ settings.
+- **Browser Support**: Modern evergreen browsers (Chrome, Firefox, Safari, Edge).
+- **Timezone**: All dates stored and displayed in UTC; client adjusts for local timezone.
+- **Data Volume**: Initial design for tens of habits per user; no heavy analytics queries yet.
 
 ---
 
 ## 8. Known Issues & Potential Pitfalls
 
-- **Static Data Limitation**: `data.json` is only for demo. A real API or database will be needed to avoid stale data.
-  *Mitigation*: Define a clear interface for data fetching so swapping to a live endpoint is trivial.
-
-- **Global CSS Conflicts**: Using global styles can lead to unintended overrides.
-  *Mitigation*: Plan to migrate to CSS Modules or utility-first CSS in Phase 2.
-
-- **API Route Ambiguity**: Single `/api/auth/route.ts` handling both sign-up and sign-in could get complex.
-  *Mitigation*: Clearly branch on HTTP method (`POST /register` vs. `POST /login`) or split into separate files.
-
-- **Lack of Testing**: No test suite means regressions can slip in.
-  *Mitigation*: Build a minimal Jest + React Testing Library setup in an early iteration.
-
-- **Error Handling Gaps**: Client and server must handle edge cases (network failures, malformed input).
-  *Mitigation*: Define a standard error response schema and show user-friendly messages.
+- **Static JSON Stub**: The dashboard currently reads static JSON. Must replace with Drizzle ORM queries to avoid stale data.
+- **Duplicate Completions**: Users could click “Log Today” multiple times before UI update. Mitigate by unique constraint on `(habitId, date)` and server-side validation.
+- **Race Conditions**: Simultaneous API calls might conflict. Use database transactions and optimistic UI updates.
+- **Schema Migrations**: Drizzle Kit migrations must run before API routes are used. Document migration steps clearly.
+- **Session Expiry**: If a user’s session expires while on the dashboard, API calls will fail. Handle 401 errors by redirecting to the login page.
+- **Responsive Breakpoints**: Ensure table and chart components degrade gracefully on small screens; test on mobile viewport.
 
 ---
 
-This PRD should serve as the single source of truth for the AI model or any developer generating the next set of technical documents: Tech Stack Doc, Frontend Guidelines, Backend Structure, App Flow, File Structure, and IDE Rules. It contains all functional and non-functional requirements with no ambiguity, enabling seamless downstream development.
+This document provides the definitive blueprint for building, testing, and deploying the first version of the habit-record-fullstack application. All development guidelines, API designs, and UI conventions should reference these requirements to maintain consistency and clarity.
