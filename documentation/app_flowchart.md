@@ -1,14 +1,16 @@
 flowchart TD
-  Start[Landing Page]
-  SignUpPage[Sign Up Page]
-  SignInPage[Sign In Page]
-  AuthAPI[Authentication API Endpoint]
-  DashboardPage[Dashboard Page]
-  Start -->|Select Sign Up| SignUpPage
-  Start -->|Select Sign In| SignInPage
-  SignUpPage -->|Submit Credentials| AuthAPI
-  SignInPage -->|Submit Credentials| AuthAPI
-  AuthAPI -->|Success| DashboardPage
-  AuthAPI -->|Error| SignUpPage
-  AuthAPI -->|Error| SignInPage
-  DashboardPage -->|Click Logout| Start
+  A[User Access] --> B[Sign In or Sign Up]
+  B --> C{Authenticated?}
+  C -->|yes| D[Load Dashboard]
+  C -->|no| B
+  D --> E[Fetch Habits from DB]
+  E --> F[Render Data Table]
+  D --> G[Render Area Chart]
+  F --> H{User Action}
+  H -->|Create New Habit| I[Open Habit Form]
+  I --> J[Submit Habit Data]
+  J --> K[API createHabit]
+  K --> E
+  H -->|Log Completion| L[Trigger logCompletion]
+  L --> M[API logCompletion]
+  M --> E
